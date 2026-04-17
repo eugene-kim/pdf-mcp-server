@@ -7,7 +7,9 @@ Codex (and other coding agents) don't have a reliable, built-in way to read PDFs
 ## Requirements
 
 - Node.js
-- `poppler` utilities (`pdftotext`, `pdftoppm`, `pdfinfo`) — install via `brew install poppler` on macOS
+- `poppler` utilities (`pdftotext`, `pdftoppm`, `pdfinfo`)
+  - macOS: `brew install poppler`
+  - Ubuntu/Debian: `sudo apt-get install -y poppler-utils`
 
 ## Install
 
@@ -19,3 +21,11 @@ npm run build
 ## Usage
 
 Register in your MCP client config, pointing at `dist/index.js`.
+
+For Codex CLI:
+
+```
+codex mcp add pdf -- node /absolute/path/to/pdf-mcp-server/dist/index.js
+```
+
+This writes an `[mcp_servers.pdf]` entry into `~/.codex/config.toml`. Verify with `codex mcp list`.
