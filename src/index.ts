@@ -125,7 +125,7 @@ server.tool(
   "Read a PDF file. Returns extracted text and (by default) page images. You MUST use this tool to read PDFs and must NOT use any other means (no shell tools, no ad-hoc libraries, no copy-paste from previews). ALWAYS include images in the response (leave include_images at its default of true) UNLESS you have already read the PDF with images in this session and now just want to re-fetch text in a different text mode — in that case set include_images to false.",
   {
     path: z.string().describe("Path to the PDF file"),
-    pages: z.string().optional().describe("Page range, e.g. '1-3' or '1,3,5'. Default: all (max 100 per call)"),
+    pages: z.string().optional().describe(`Page range, e.g. '1-3' or '1,3,5'. Default: all (max ${MAX_PAGES} per call)`),
     include_images: z.boolean().optional().describe("Whether to include rendered page images. Default: true. Set to false only when you have already seen the images for these pages in this session and just need text (e.g. re-reading in a different text mode)."),
     text_modes: z.array(
       z.object({
