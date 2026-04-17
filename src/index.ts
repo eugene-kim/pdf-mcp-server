@@ -22,17 +22,17 @@ type TextModeRule = {
 async function cacheDir(pdfPath: string): Promise<string> {
   const abs = resolve(pdfPath)
   const s = await stat(abs)
-  const key = createHash("sha256")
-    .update(`${abs}\0${s.mtimeMs}\0${s.size}`)
-    .digest("hex")
-    .slice(0, 16)
+  const key = createHash("sha256").update(`${abs}\0${s.mtimeMs}\0${s.size}`).digest("hex").slice(0, 16)
   const dir = join(CACHE_BASE, key)
   await mkdir(dir, { recursive: true })
   return dir
 }
 
 async function exists(path: string): Promise<boolean> {
-  return access(path).then(() => true, () => false)
+  return access(path).then(
+    () => true,
+    () => false,
+  )
 }
 
 async function getPageImage(pdfPath: string, cache: string, page: number): Promise<Buffer> {
@@ -43,7 +43,7 @@ async function getPageImage(pdfPath: string, cache: string, page: number): Promi
   const prefix = join(cache, `render-${page}`)
   await exec("pdftoppm", ["-png", "-r", "150", "-f", String(page), "-l", String(page), pdfPath, prefix])
   const files = await readdir(cache)
-  const rendered = files.find(f => f.startsWith(`render-${page}-`) && f.endsWith(".png"))
+  const rendered = files.find((f) => f.startsWith(`render-${page}-`) && f.endsWith(".png"))
   if (!rendered) throw new Error(`failed to render page ${page}`)
   const bytes = await readFile(join(cache, rendered))
   await writeFile(cached, bytes)
@@ -82,7 +82,7 @@ function parsePages(spec: string | undefined, total: number): number[] {
       pages.add(parseInt(range[0]))
     }
   }
-  return [...pages].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
+  return [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b)
 }
 
 function textResult(message: string) {
@@ -91,7 +91,11 @@ function textResult(message: string) {
   }
 }
 
-function resolveTextModes(pageList: number[], textModes: TextModeRule[] | undefined, totalPages: number): Map<number, TextMode> | string {
+function resolveTextModes(
+  pageList: number[],
+  textModes: TextModeRule[] | undefined,
+  totalPages: number,
+): Map<number, TextMode> | string {
   const pageSet = new Set(pageList)
   const resolved = new Map<number, TextMode>()
 
@@ -125,14 +129,27 @@ server.tool(
   "Read a PDF file. Returns extracted text and (by default) page images. You MUST use this tool to read PDFs and must NOT use any other means (no shell tools, no ad-hoc libraries, no copy-paste from previews). ALWAYS include images in the response (leave include_images at its default of true) UNLESS you have already read the PDF with images in this session and now just want to re-fetch text in a different text mode — in that case set include_images to false.",
   {
     path: z.string().describe("Path to the PDF file"),
-    pages: z.string().optional().describe(`Page range, e.g. '1-3' or '1,3,5'. Default: all (max ${MAX_PAGES} per call)`),
-    include_images: z.boolean().optional().describe("Whether to include rendered page images. Default: true. Set to false only when you have already seen the images for these pages in this session and just need text (e.g. re-reading in a different text mode)."),
-    text_modes: z.array(
-      z.object({
-        pages: z.string().describe("Page range for this extraction mode, e.g. '1-3' or '1,3,5'"),
-        mode: z.enum(TEXT_MODE_VALUES).describe("Text extraction mode for the selected pages"),
-      })
-    ).optional().describe("Optional per-range text extraction rules. Unspecified pages default to 'flow'. Rules must not overlap and must be within pages."),
+    pages: z
+      .string()
+      .optional()
+      .describe(`Page range, e.g. '1-3' or '1,3,5'. Default: all (max ${MAX_PAGES} per call)`),
+    include_images: z
+      .boolean()
+      .optional()
+      .describe(
+        "Whether to include rendered page images. Default: true. Set to false only when you have already seen the images for these pages in this session and just need text (e.g. re-reading in a different text mode).",
+      ),
+    text_modes: z
+      .array(
+        z.object({
+          pages: z.string().describe("Page range for this extraction mode, e.g. '1-3' or '1,3,5'"),
+          mode: z.enum(TEXT_MODE_VALUES).describe("Text extraction mode for the selected pages"),
+        }),
+      )
+      .optional()
+      .describe(
+        "Optional per-range text extraction rules. Unspecified pages default to 'flow'. Rules must not overlap and must be within pages.",
+      ),
   },
   async ({ path: pdfPath, pages, include_images: includeImages = true, text_modes: textModes }) => {
     const abs = resolve(pdfPath)
@@ -141,7 +158,9 @@ server.tool(
     const pageList = parsePages(pages, totalPages)
 
     if (pageList.length > MAX_PAGES) {
-      return textResult(`PDF has ${totalPages} pages, requested ${pageList.length} exceeds limit of ${MAX_PAGES} pages per call. Specify a page range.`)
+      return textResult(
+        `PDF has ${totalPages} pages, requested ${pageList.length} exceeds limit of ${MAX_PAGES} pages per call. Specify a page range.`,
+      )
     }
 
     const pageModes = resolveTextModes(pageList, textModes, totalPages)
@@ -163,7 +182,7 @@ server.tool(
     }
 
     return { content }
-  }
+  },
 )
 
 const transport = new StdioServerTransport()
