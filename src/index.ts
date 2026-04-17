@@ -41,7 +41,7 @@ async function getPageImage(pdfPath: string, cache: string, page: number): Promi
   if (await exists(cached)) return readFile(cached)
 
   const prefix = join(cache, `render-${page}`)
-  await exec("pdftoppm", ["-png", "-r", "150", "-f", String(page), "-l", String(page), pdfPath, prefix])
+  await exec("pdftoppm", ["-png", "-r", "120", "-f", String(page), "-l", String(page), pdfPath, prefix])
   const files = await readdir(cache)
   const rendered = files.find((f) => f.startsWith(`render-${page}-`) && f.endsWith(".png"))
   if (!rendered) throw new Error(`failed to render page ${page}`)
@@ -70,7 +70,7 @@ function wrapPageText(page: number, text: string): string {
 }
 
 function parsePages(spec: string | undefined, total: number): number[] {
-  if (!spec) return Array.from({ length: Math.min(total, MAX_PAGES) }, (_, i) => i + 1)
+  if (!spec) return Array.from({ length: total }, (_, i) => i + 1)
   const pages = new Set<number>()
   for (const part of spec.split(",")) {
     const range = part.trim().split("-")
